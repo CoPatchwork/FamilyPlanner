@@ -1,0 +1,34 @@
+name: Unzip and commit
+on:
+  push:
+    paths:
+      - 'family-planner.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip project
+        run: |
+          if [ -f family-planner.zip ]; then
+            unzip -o family-planner.zip -d .
+            if [ -d family-planner ]; then
+              shopt -s dotglob
+              mv family-planner/* .
+              rmdir family-planner
+            fi
+            rm family-planner.zip
+          fi
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git add -f .env.local || true
+          git diff --staged --quiet || git commit -m "Entpacke family-planner.zip"
+          git push
